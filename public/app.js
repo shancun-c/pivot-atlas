@@ -1,5 +1,5 @@
-import {mountComparison} from './comparison-view.mjs?v=20261006-research4';
-import {mountPerformance} from './performance-view.mjs?v=20261006-research4';
+import {mountComparison} from './comparison-view.mjs?v=20261006-research4a';
+import {mountPerformance} from './performance-view.mjs?v=20261006-research4a';
 import {structureWatch} from './structure-watch.mjs?v=20261006-watch9';
 import {icon,marketIcon} from './icons.mjs';
 import {mountChart} from './chart.mjs?v=20261006-td9-ths';

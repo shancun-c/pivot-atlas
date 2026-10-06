@@ -21,7 +21,7 @@ export function mountComparison(root){
  function sync(){for(let i=0;i<4;i++)find(`[data-slot="${i}"]`).value=selection[i]||''}
  function draw(){
   const selected=selection.filter(Boolean).map(id=>assets.find(a=>a.id===id)).filter(Boolean);
-  const result=compareAssets(selected,records,Number(find('#comparison-window').value),config().range);lastResult=result;find('#comparison-lock').disabled=!!result.error;find('#comparison-window').disabled=!!(config().range.start||config().range.end);
+  const result=compareAssets(selected,records,Number(find('#comparison-window').value),config().range);lastResult=result;find('#comparison-lock').disabled=!!result.error;find('#comparison-window').disabled=!!(config().range.start||config().range.end);find('#comparison-window').closest('label').hidden=find('#comparison-window').disabled;
   root.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.preset===selection.filter(Boolean).join(','))));
   const out=root.querySelector('#comparison-output');
   if(result.error){out.innerHTML=`<p class="comparison-message" role="status">${esc(result.error)}</p>`;return;}
