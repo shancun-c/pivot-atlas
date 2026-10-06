@@ -1,8 +1,9 @@
+import {mountPerformance} from './performance-view.mjs?v=20261006-matrix';
 import {structureWatch} from './structure-watch.mjs?v=20261006-watch9';
 import {icon,marketIcon} from './icons.mjs';
 import {mountChart} from './chart.mjs?v=20261006-td9-ths';
 const $=s=>document.querySelector(s);
-for(const [id,name] of Object.entries({overview:'chart','structure-nav':'layers',watchlist:'star','source-nav':'database',export:'download',refresh:'refresh',help:'help',method:'compass','clear-filters':'close','reset-empty':'globe'})){
+for(const [id,name] of Object.entries({overview:'chart','structure-nav':'layers','performance-nav':'chart',watchlist:'star','source-nav':'database',export:'download',refresh:'refresh',help:'help',method:'compass','clear-filters':'close','reset-empty':'globe'})){
  const el=$('#'+id);if(el){if(id==='help')el.innerHTML=icon(name);else el.insertAdjacentHTML('afterbegin',icon(name));}}
 $('.brand-icon').innerHTML=icon('globe');
 $('.search span').innerHTML=icon('search');
@@ -28,22 +29,27 @@ function captureFocus(root){
  return null;
 }
 function restoreFocus(root,selector){if(selector)root.querySelector(selector)?.focus({preventScroll:true})}
+let performanceReturn=null;
+const renderPerformance=mountPerformance($('#performance-page'),id=>{performanceReturn=id;showDetail(id,'week')});
 const isStructurePage=()=>location.hash==='#structures';
 function renderPage(){
- const watching=isStructurePage();
+ const watching=isStructurePage(),matrix=location.hash==='#performance';
+ $('#performance-page').hidden=!matrix;
+ $('#performance-nav').classList.toggle('active',matrix);$('#performance-nav').setAttribute('aria-pressed',String(matrix));
  $('#structures-page').hidden=!watching;
- for(const selector of ['.board','.view-selector','.notice','#export'])$(selector).hidden=watching;
- $('.heading-copy h1').textContent=watching?'九转观察':'全球枢轴观测站';
- $('.heading-copy p').textContent=watching?'跟踪最新九转与发展中序列，进入 K 线核验。':'以周与月为尺度，看清每一个关键价位。';
- $('#page-crumb').textContent=watching?'九转观察':'全球市场';
+ for(const selector of ['.board','.view-selector','.notice','#export'])$(selector).hidden=watching||matrix;
+ $('.heading-copy h1').textContent=matrix?'跨市场表现':watching?'九转观察':'全球枢轴观测站';
+ $('.heading-copy p').textContent=matrix?'比较多周期表现，识别跨市场强弱变化。':watching?'跟踪最新九转与发展中序列，进入 K 线核验。':'以周与月为尺度，看清每一个关键价位。';
+ $('#page-crumb').textContent=matrix?'跨市场表现':watching?'九转观察':'全球市场';
  $('#structure-nav').classList.toggle('active',watching);$('#structure-nav').setAttribute('aria-pressed',String(watching));
- for(const id of ['overview','watchlist']){const active=!watching&&(id==='watchlist'?favoritesOnly:!favoritesOnly);$('#'+id).classList.toggle('active',active);$('#'+id).setAttribute('aria-pressed',String(active))}
- document.querySelectorAll('.market-link').forEach(b=>{b.classList.toggle('active',!watching&&b.dataset.group===group);b.setAttribute('aria-pressed',String(!watching&&b.dataset.group===group))});
- document.querySelectorAll('.mobile-pages a').forEach(a=>{if(a.hash===(watching?'#structures':'#board'))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
- document.title=(watching?'九转观察':'全球枢轴看板')+' · Pivot Atlas';
+ for(const id of ['overview','watchlist']){const active=!watching&&!matrix&&(id==='watchlist'?favoritesOnly:!favoritesOnly);$('#'+id).classList.toggle('active',active);$('#'+id).setAttribute('aria-pressed',String(active))}
+ document.querySelectorAll('.market-link').forEach(b=>{b.classList.toggle('active',!watching&&!matrix&&b.dataset.group===group);b.setAttribute('aria-pressed',String(!watching&&!matrix&&b.dataset.group===group))});
+ document.querySelectorAll('.mobile-pages a').forEach(a=>{if(a.hash===(matrix?'#performance':watching?'#structures':'#board'))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+ document.title=(matrix?'跨市场表现':watching?'九转观察':'全球枢轴看板')+' · Pivot Atlas';
 }
 function navigatePage(page){if(location.hash!=='#'+page)location.hash=page;renderPage()}
 window.addEventListener('hashchange',()=>{renderPage();window.scrollTo(0,0)});
+$('#performance-nav').onclick=()=>navigatePage('performance');
 $('#structure-nav').onclick=()=>navigatePage('structures');
 let structureExpanded=false,structureReturn=null;
 $('#structure-list').addEventListener('click',e=>{const b=e.target.closest('[data-detail]');if(b){structureReturn=b.dataset.detail;showDetail(b.dataset.detail,'week')}});
@@ -59,6 +65,7 @@ function renderStructureWatch(){
 }
 $('#structure-toggle').addEventListener('click',()=>{structureExpanded=!structureExpanded;renderStructureWatch()});
 function render(){
+ renderPerformance(assets,records,busy);
  renderStructureWatch();
  const rowFocus=captureFocus($('#table-body'));
  const cols=columns();const list=visible();const ps=period==='both'?['week','month']:[period];
@@ -104,7 +111,7 @@ $('#detail-content').addEventListener('click',e=>{const b=e.target.closest('[dat
 $('#detail-content').addEventListener('change',e=>{if(e.target.id==='chart-count')showDetail(chartState.id,chartState.p,{...chartState,count:Number(e.target.value)});if(e.target.id==='chart-depth')showDetail(chartState.id,chartState.p,{...chartState,depth:e.target.checked?5:3})});
 function clearFilters(){statusFilter='all';favoritesOnly=false;group='全部';$('#search').value='';render();$('#search').focus();$('#announcements').textContent='已清除筛选，显示全部资产。'}
 $('#clear-filters').onclick=clearFilters;$('#reset-empty').onclick=clearFilters;
-$('#detail').addEventListener('close',()=>{if(structureReturn){const target=$('#structure-list').querySelector(`[data-detail="${structureReturn}"]`);structureReturn=null;(target||$('#structure-toggle:not([hidden])')||$('#structure-nav')).focus({preventScroll:true});return}const target=$('#table-body').querySelector(`[data-detail="${chartState.id}"][data-p="${chartState.p}"]`)||$('#table-body').querySelector(`[data-detail="${chartState.id}"]`);(target||$('#search')).focus({preventScroll:true})});
+$('#detail').addEventListener('close',()=>{if(performanceReturn){const target=$('#performance-page').querySelector(`[data-asset="${performanceReturn}"]`);performanceReturn=null;(target||$('#performance-nav')).focus({preventScroll:true});return}if(structureReturn){const target=$('#structure-list').querySelector(`[data-detail="${structureReturn}"]`);structureReturn=null;(target||$('#structure-toggle:not([hidden])')||$('#structure-nav')).focus({preventScroll:true});return}const target=$('#table-body').querySelector(`[data-detail="${chartState.id}"][data-p="${chartState.p}"]`)||$('#table-body').querySelector(`[data-detail="${chartState.id}"]`);(target||$('#search')).focus({preventScroll:true})});
 $('#search').addEventListener('input',render);$('#extended').addEventListener('change',render);$('#refresh').addEventListener('click',()=>refresh(true));
 $('#mobile-stars').onclick=()=>{favoritesOnly=!favoritesOnly;group='全部';render()};
 $('#overview').onclick=()=>{navigatePage('board');statusFilter='all';favoritesOnly=false;group='全部';render()};$('#watchlist').onclick=()=>{navigatePage('board');favoritesOnly=true;group='全部';render()};
