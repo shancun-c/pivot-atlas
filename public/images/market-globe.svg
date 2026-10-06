@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="280" viewBox="0 0 560 280" fill="none">
+<defs><radialGradient id="sphere" cx=".3" cy=".25" r=".8"><stop stop-color="#e2f2ef"/><stop offset="1" stop-color="#b5d6d5"/></radialGradient><clipPath id="clip"><circle cx="345" cy="142" r="108"/></clipPath></defs>
+<circle cx="345" cy="142" r="108" fill="url(#sphere)"/>
+<g clip-path="url(#clip)" stroke="#659b9e" stroke-opacity=".55"><ellipse cx="345" cy="142" rx="72" ry="108"/><ellipse cx="345" cy="142" rx="30" ry="108"/><ellipse cx="345" cy="142" rx="108" ry="37"/><ellipse cx="345" cy="142" rx="108" ry="78"/><path d="M237 142h216M345 34v216"/></g>
+<ellipse cx="345" cy="142" rx="158" ry="62" transform="rotate(-28 345 142)" stroke="#397d86" stroke-width="1.5" stroke-dasharray="3 6"/>
+<path d="M159 88h102l53 37M411 105h70M383 204l28 40h72" stroke="#397d86" stroke-opacity=".6"/>
+<g fill="#155e68"><circle cx="314" cy="125" r="5"/><circle cx="411" cy="105" r="5"/><circle cx="383" cy="204" r="5"/></g>
+<g fill="#155e68" font-family="sans-serif" font-size="11" letter-spacing="2"><text x="157" y="77">ASIA PACIFIC</text><text x="466" y="95">GLOBAL</text><text x="417" y="266">MARKETS</text></g>
+<circle cx="224" cy="210" r="4" fill="#c68c53"/><circle cx="475" cy="56" r="3" fill="#c68c53"/>
+</svg>

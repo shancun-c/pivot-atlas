@@ -1,0 +1,476 @@
+[
+  {
+    "id": "hsi",
+    "name": "恒生指数",
+    "code": "800000.HK",
+    "group": "港股",
+    "symbol": "^HSI",
+    "unit": "点",
+    "etfs": "513600 · 2800.HK · EWH",
+    "em": "100.HSI"
+  },
+  {
+    "id": "hstech",
+    "name": "恒生科技指数",
+    "code": "800700.HK",
+    "group": "港股",
+    "symbol": "HSTECH.HK",
+    "em": "124.HSTECH",
+    "unit": "点",
+    "etfs": "513130 · 3033.HK · KTEC",
+    "provider": "eastmoney",
+    "qq": "hkHSTECH"
+  },
+  {
+    "id": "hsbio",
+    "name": "恒生生物科技指数",
+    "code": "800805.HK",
+    "group": "港股",
+    "symbol": "HSHKBIO.HK",
+    "em": "124.HSHKBIO",
+    "unit": "点",
+    "etfs": "513280 · 3174.HK",
+    "provider": "eastmoney"
+  },
+  {
+    "id": "ewselect",
+    "name": "东西精选",
+    "code": "03441.HK",
+    "group": "港股",
+    "symbol": "3441.HK",
+    "em": "116.03441",
+    "unit": "HKD"
+  },
+  {
+    "id": "hkkr",
+    "name": "港韩科技",
+    "code": "03431.HK",
+    "group": "港股",
+    "symbol": "3431.HK",
+    "em": "116.03431",
+    "unit": "HKD"
+  },
+  {
+    "id": "hkmag7",
+    "name": "美股七巨头",
+    "code": "03454.HK",
+    "group": "港股",
+    "symbol": "3454.HK",
+    "em": "116.03454",
+    "unit": "HKD"
+  },
+  {
+    "id": "ndx",
+    "name": "纳斯达克100指数",
+    "code": "NDX",
+    "group": "美股",
+    "symbol": "^NDX",
+    "unit": "点",
+    "etfs": "159660 · QQQ"
+  },
+  {
+    "id": "spx",
+    "name": "标普500指数",
+    "code": "SPX",
+    "group": "美股",
+    "symbol": "^GSPC",
+    "unit": "点",
+    "etfs": "513500 · SPY · VOO"
+  },
+  {
+    "id": "rut",
+    "name": "罗素2000指数",
+    "code": "RUT",
+    "group": "美股",
+    "symbol": "^RUT",
+    "unit": "点",
+    "etfs": "IWM · VTWO"
+  },
+  {
+    "id": "xle",
+    "name": "能源 ETF",
+    "code": "XLE",
+    "group": "美股",
+    "symbol": "XLE",
+    "unit": "USD"
+  },
+  {
+    "id": "smh",
+    "name": "半导体 ETF",
+    "code": "SMH",
+    "group": "美股",
+    "symbol": "SMH",
+    "unit": "USD"
+  },
+  {
+    "id": "xbi",
+    "name": "生物科技 ETF",
+    "code": "XBI",
+    "group": "美股",
+    "symbol": "XBI",
+    "unit": "USD"
+  },
+  {
+    "id": "mags",
+    "name": "七巨头 ETF",
+    "code": "MAGS",
+    "group": "美股",
+    "symbol": "MAGS",
+    "unit": "USD"
+  },
+  {
+    "id": "dram",
+    "name": "存储 ETF",
+    "code": "DRAM",
+    "group": "美股",
+    "symbol": "DRAM",
+    "unit": "USD"
+  },
+  {
+    "id": "euv",
+    "name": "EUV ETF（原图：光通信）",
+    "code": "EUV",
+    "group": "美股",
+    "symbol": "EUV",
+    "unit": "USD",
+    "note": "按原图代码 EUV 查询；数据源名称为 Corgi Lithography & Semiconductor，原图中文简称与基金名称不一致。"
+  },
+  {
+    "id": "dba",
+    "name": "德银农业 ETF",
+    "code": "DBA",
+    "group": "美股",
+    "symbol": "DBA",
+    "unit": "USD"
+  },
+  {
+    "id": "spmo",
+    "name": "标普动量因子 ETF",
+    "code": "SPMO",
+    "group": "美股",
+    "symbol": "SPMO",
+    "unit": "USD"
+  },
+  {
+    "id": "tlt",
+    "name": "20年+美债 ETF",
+    "code": "TLT",
+    "group": "美股",
+    "symbol": "TLT",
+    "unit": "USD"
+  },
+  {
+    "id": "sse",
+    "name": "上证指数",
+    "code": "000001",
+    "group": "A股",
+    "symbol": "000001.SS",
+    "em": "1.000001",
+    "unit": "点",
+    "provider": "eastmoney",
+    "qq": "sh000001"
+  },
+  {
+    "id": "chinext",
+    "name": "创业板指",
+    "code": "399006",
+    "group": "A股",
+    "symbol": "399006.SZ",
+    "em": "0.399006",
+    "unit": "点",
+    "etfs": "159915 · 3147.HK · CNXT",
+    "provider": "eastmoney",
+    "qq": "sz399006"
+  },
+  {
+    "id": "ai",
+    "name": "创业板人工智能 ETF",
+    "code": "159363",
+    "group": "A股",
+    "symbol": "159363.SZ",
+    "em": "0.159363",
+    "unit": "CNY"
+  },
+  {
+    "id": "csi300",
+    "name": "沪深300指数",
+    "code": "000300",
+    "group": "A股",
+    "symbol": "000300.SS",
+    "em": "1.000300",
+    "unit": "点",
+    "etfs": "510300 · 3188.HK · ASHR",
+    "provider": "eastmoney",
+    "qq": "sh000300"
+  },
+  {
+    "id": "csi500",
+    "name": "中证A500指数",
+    "code": "000510",
+    "group": "A股",
+    "symbol": "000510.SS",
+    "em": "1.000510",
+    "unit": "点",
+    "provider": "eastmoney",
+    "qq": "sh000510"
+  },
+  {
+    "id": "star50",
+    "name": "科创50指数",
+    "code": "000688",
+    "group": "A股",
+    "symbol": "000688.SS",
+    "em": "1.000688",
+    "unit": "点",
+    "etfs": "588000 · 3109.HK · KSTR",
+    "provider": "eastmoney",
+    "qq": "sh000688"
+  },
+  {
+    "id": "telecom",
+    "name": "通信 ETF",
+    "code": "515880",
+    "group": "A股",
+    "symbol": "515880.SS",
+    "em": "1.515880",
+    "unit": "CNY"
+  },
+  {
+    "id": "nikkei",
+    "name": "日经225指数",
+    "code": "N225",
+    "group": "亚太及新兴",
+    "symbol": "^N225",
+    "unit": "点",
+    "etfs": "513880 · 3153.HK · EWJ"
+  },
+  {
+    "id": "kospi",
+    "name": "韩国 KOSPI 指数",
+    "code": "KS11",
+    "group": "亚太及新兴",
+    "symbol": "^KS11",
+    "unit": "点",
+    "etfs": "EWY"
+  },
+  {
+    "id": "ewz",
+    "name": "巴西 ETF",
+    "code": "EWZ",
+    "group": "亚太及新兴",
+    "symbol": "EWZ",
+    "unit": "USD"
+  },
+  {
+    "id": "us10y",
+    "name": "10年期美国国债收益率",
+    "code": "US10Y",
+    "group": "国债收益率",
+    "provider": "bond",
+    "field": "EMG00001310",
+    "unit": "%",
+    "note": "日频到期收益率观测值；周/月高低值为日观测极值，不是盘中最高最低收益率。"
+  },
+  {
+    "id": "cn10y",
+    "name": "10年期中国国债收益率",
+    "code": "CN10Y",
+    "group": "国债收益率",
+    "provider": "bond",
+    "field": "EMM00166466",
+    "unit": "%",
+    "note": "日频到期收益率观测值；周/月高低值为日观测极值，不是盘中最高最低收益率。"
+  },
+  {
+    "id": "au",
+    "name": "沪金期货主连",
+    "code": "AU0",
+    "group": "境内商品",
+    "provider": "sina",
+    "symbol": "AU0",
+    "unit": "元/克",
+    "note": "新浪主力连续，使用收盘价而非结算价；换月可能影响价位。"
+  },
+  {
+    "id": "ag",
+    "name": "沪银期货主连",
+    "code": "AG0",
+    "group": "境内商品",
+    "provider": "sina",
+    "symbol": "AG0",
+    "unit": "元/千克",
+    "note": "新浪主力连续，使用收盘价而非结算价；换月可能影响价位。"
+  },
+  {
+    "id": "xau",
+    "name": "国际现货黄金",
+    "code": "XAUUSD",
+    "group": "境外商品",
+    "provider": "sina-global",
+    "symbol": "XAU",
+    "unit": "美元/盎司"
+  },
+  {
+    "id": "gc",
+    "name": "COMEX 黄金期货",
+    "code": "GCmain",
+    "group": "境外商品",
+    "symbol": "GC=F",
+    "unit": "美元/盎司",
+    "note": "Yahoo 连续近月序列，与原图主力连续换月规则未必相同。"
+  },
+  {
+    "id": "xag",
+    "name": "国际现货白银",
+    "code": "XAGUSD",
+    "group": "境外商品",
+    "provider": "sina-global",
+    "symbol": "XAG",
+    "unit": "美元/盎司"
+  },
+  {
+    "id": "si",
+    "name": "COMEX 白银期货",
+    "code": "SImain",
+    "group": "境外商品",
+    "symbol": "SI=F",
+    "unit": "美元/盎司",
+    "note": "Yahoo 连续近月序列，与原图主力连续换月规则未必相同。"
+  },
+  {
+    "id": "hg",
+    "name": "COMEX 铜期货",
+    "code": "HGmain",
+    "group": "境外商品",
+    "symbol": "HG=F",
+    "unit": "美元/磅",
+    "note": "Yahoo 连续近月序列，与原图主力连续换月规则未必相同。"
+  },
+  {
+    "id": "cl",
+    "name": "WTI 原油期货",
+    "code": "CLmain",
+    "group": "境外商品",
+    "symbol": "CL=F",
+    "unit": "美元/桶",
+    "note": "Yahoo 连续近月序列，与原图主力连续换月规则未必相同。"
+  },
+  {
+    "id": "ali",
+    "name": "COMEX 铝期货",
+    "code": "ALmain",
+    "group": "境外商品",
+    "symbol": "ALI=F",
+    "unit": "美元/吨",
+    "note": "Yahoo 连续近月序列，与原图主力连续换月规则未必相同。"
+  },
+  {
+    "id": "ng",
+    "name": "天然气期货",
+    "code": "NGmain",
+    "group": "境外商品",
+    "symbol": "NG=F",
+    "unit": "美元/MMBtu",
+    "note": "Yahoo 连续近月序列，与原图主力连续换月规则未必相同。"
+  },
+  {
+    "id": "zs",
+    "name": "美大豆期货",
+    "code": "ZSmain",
+    "group": "境外商品",
+    "symbol": "ZS=F",
+    "unit": "美分/蒲式耳",
+    "note": "Yahoo 连续近月序列，与原图主力连续换月规则未必相同。"
+  },
+  {
+    "id": "zw",
+    "name": "美小麦期货",
+    "code": "ZWmain",
+    "group": "境外商品",
+    "symbol": "ZW=F",
+    "unit": "美分/蒲式耳",
+    "note": "Yahoo 连续近月序列，与原图主力连续换月规则未必相同。"
+  },
+  {
+    "id": "zc",
+    "name": "美玉米期货",
+    "code": "ZCmain",
+    "group": "境外商品",
+    "symbol": "ZC=F",
+    "unit": "美分/蒲式耳",
+    "note": "Yahoo 连续近月序列，与原图主力连续换月规则未必相同。"
+  },
+  {
+    "id": "dxy",
+    "name": "美元指数",
+    "code": "DXY",
+    "group": "外汇",
+    "symbol": "DX-Y.NYB",
+    "unit": "点"
+  },
+  {
+    "id": "cnh",
+    "name": "美元 / 离岸人民币",
+    "code": "USDCNH",
+    "group": "外汇",
+    "symbol": "CNH=X",
+    "unit": "CNH/USD",
+    "em": "133.USDCNH",
+    "provider": "eastmoney",
+    "sina_fx": "fx_susdcnh"
+  },
+  {
+    "id": "jpy",
+    "name": "美元 / 日元",
+    "code": "USDJPY",
+    "group": "外汇",
+    "symbol": "JPY=X",
+    "unit": "JPY/USD"
+  },
+  {
+    "id": "eur",
+    "name": "欧元 / 美元",
+    "code": "EURUSD",
+    "group": "外汇",
+    "symbol": "EURUSD=X",
+    "unit": "USD/EUR"
+  },
+  {
+    "id": "gbp",
+    "name": "英镑 / 美元",
+    "code": "GBPUSD",
+    "group": "外汇",
+    "symbol": "GBPUSD=X",
+    "unit": "USD/GBP"
+  },
+  {
+    "id": "btc",
+    "name": "比特币 BTC",
+    "code": "BTC / USD",
+    "group": "加密货币",
+    "symbol": "BTC-USD",
+    "unit": "USD",
+    "provider": "coinbase",
+    "note": "Coinbase 现货，24/7 交易；UTC 00:00 划分日线，仅展示已结束日线。"
+  },
+  {
+    "id": "eth",
+    "name": "以太坊 ETH",
+    "code": "ETH / USD",
+    "group": "加密货币",
+    "symbol": "ETH-USD",
+    "unit": "USD",
+    "provider": "coinbase",
+    "note": "Coinbase 现货，24/7 交易；UTC 00:00 划分日线，仅展示已结束日线。"
+  },
+  {
+    "id": "sol",
+    "name": "Solana SOL",
+    "code": "SOL / USD",
+    "group": "加密货币",
+    "symbol": "SOL-USD",
+    "unit": "USD",
+    "provider": "coinbase",
+    "note": "Coinbase 现货，24/7 交易；UTC 00:00 划分日线，仅展示已结束日线。"
+  }
+]
