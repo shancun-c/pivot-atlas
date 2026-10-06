@@ -1,4 +1,4 @@
-import {mountComparison} from './comparison-view.mjs?v=20261006-compare';
+import {mountComparison} from './comparison-view.mjs?v=20261006-compare2';
 import {mountPerformance} from './performance-view.mjs?v=20261006-matrix';
 import {structureWatch} from './structure-watch.mjs?v=20261006-watch9';
 import {icon,marketIcon} from './icons.mjs';
