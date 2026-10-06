@@ -1,0 +1,26 @@
+import {compareAssets} from './comparison.mjs';
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const colors=['#135b63','#a14432','#67509b','#235f96'];
+function plot(result,yields){
+ const lines=result.lines.map((s,i)=>({...s,color:colors[i],index:i})).filter(s=>(s.asset.unit==='%')===yields);if(!lines.length)return '';
+ const all=lines.flatMap(s=>s.values),lo=Math.min(...all),hi=Math.max(...all),pad=Math.max((hi-lo)*.12,1),min=lo-pad,max=hi+pad;
+ const first=Date.parse(result.dates[0]),span=Date.parse(result.dates.at(-1))-first;
+ const x=i=>60+(Date.parse(result.dates[i])-first)/span*820,y=v=>220-(v-min)/(max-min)*175;
+ const title=yields?'收益率累计变动 · bp':'价格走势 · 共同起点 = 100';
+ return `<h3>${title}</h3><div class="comparison-legend">${lines.map(s=>`<span style="color:${s.color}">${s.index+1}. ${esc(s.asset.name)}</span>`).join('')}</div><svg viewBox="0 0 940 260" role="img" aria-label="${title}，完整数据见下方表格">${[0,1,2,3,4].map(i=>{const v=min+(max-min)*i/4;return `<line x1="60" x2="880" y1="${y(v)}" y2="${y(v)}" stroke="#d7e0e3"/><text x="52" y="${y(v)+4}" text-anchor="end">${v.toFixed(1)}</text>`}).join('')}${lines.map(s=>`<polyline fill="none" stroke="${s.color}" stroke-width="2.3" stroke-dasharray="${s.index%2?'7 3':'none'}" points="${s.values.map((v,i)=>`${x(i)},${y(v)}`).join('')}"/><text x="890" y="${y(s.values.at(-1))+4}" fill="${s.color}">${s.index+1}</text>`).join('')}<text x="60" y="247">${result.dates[0]}</text><text x="880" y="247" text-anchor="end">${result.dates.at(-1)}</text></svg>`;
+}
+export function mountComparison(root){
+ root.innerHTML=`<div class="performance-heading"><h2>让不同市场互相验证</h2><p>先对齐观察窗口，再观察共同变化；价格与利率分轴呈现。</p></div><div class="comparison-presets" role="group" aria-label="研究组合"><button class="button" data-preset="dxy,xau">美元与黄金</button><button class="button" data-preset="us10y,spx,tlt">利率与风险资产</button><button class="button" data-preset="hg,cl,dxy">工业品</button></div><div class="performance-controls">${[0,1,2,3].map(i=>`<label>标的 ${i+1}${i>1?'（可选）':''}<select data-slot="${i}"></select></label>`).join('')}<label>观察窗口<select id="comparison-window"><option value="30">近30自然日</option><option value="90" selected>近90自然日</option><option value="180">近180自然日</option></select></label></div><div id="comparison-output" aria-live="off"></div>`;
+ let assets=[],records=new Map(),initialized=false,selection=['dxy','xau','us10y','spx'];
+ function draw(){
+  const selected=selection.filter(Boolean).map(id=>assets.find(a=>a.id===id)).filter(Boolean);
+  const result=compareAssets(selected,records,Number(root.querySelector('#comparison-window').value));
+  root.querySelectorAll('[data-preset]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.preset===selection.filter(Boolean).join(','))));
+  const out=root.querySelector('#comparison-output');
+  if(result.error){out.innerHTML=`<p class="comparison-message" role="status">${esc(result.error)}</p>`;return;}
+  out.innerHTML=`<p class="performance-note">实际共同区间 ${result.dates[0]} — ${result.dates.at(-1)} · ${result.dates.length} 个共同日期 · ${result.intervals} 个变动样本。请求窗口起点 ${result.start}；休市或历史不足可能缩短区间。</p><div class="comparison-plots">${plot(result,false)}${plot(result,true)}</div><div class="comparison-tables"><h3>同一区间的变化</h3><div class="performance-scroll"><table><thead><tr><th>标的</th><th>区间变化</th><th>来源最新日线</th><th>区间内未对齐日期</th></tr></thead><tbody>${result.lines.map(s=>`<tr><th>${esc(s.asset.name)}<small>${esc(s.source)}</small></th><td>${s.result>0?'+':''}${s.result.toFixed(2)} ${s.unit}</td><td>${s.latest}</td><td>${s.excluded}</td></tr>`).join('')}</tbody></table></div><h3>共同区间变动的相关性</h3><p class="performance-note">至少20个变动样本；跨休市间隔可能为多日。相关性描述共变，不代表因果或领先关系。</p><div class="performance-scroll"><table><thead><tr><th>资产对</th><th>Pearson r</th><th>样本数</th></tr></thead><tbody>${result.pairs.map(p=>`<tr><th>${esc(p.a)} / ${esc(p.b)}</th><td>${p.value==null?'—（样本不足或无变化）':p.value.toFixed(2)}</td><td>${p.n}</td></tr>`).join('')}</tbody></table></div><details class="performance-method"><summary>查看完整对齐数据与口径</summary><p>日期取交集，不填充缺失值，剔除当日日线。价格按本币报价计算，不含分红；收益率从共同起点累计bp变化。美国10年期国债收益率为名义收益率，不等于实际利率。不同市场的同一日期可能对应不同收盘时刻，连续期货换月和源数据调整也会影响结果。</p><div class="performance-scroll"><table><thead><tr><th>共同日期</th>${result.lines.map(s=>`<th>${esc(s.asset.name)}<small>${s.asset.unit==='%'?'累计 bp':'标准化价格'}</small></th>`).join('')}</tr></thead><tbody>${result.dates.map((d,i)=>`<tr><th>${d}</th>${result.lines.map(s=>`<td>${s.values[i].toFixed(2)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details></div>`;
+ }
+ root.addEventListener('change',e=>{if(e.target.matches('[data-slot]'))selection[Number(e.target.dataset.slot)]=e.target.value;draw()});
+ root.addEventListener('click',e=>{const b=e.target.closest('[data-preset]');if(b){selection=b.dataset.preset.split(',');for(let i=0;i<4;i++)root.querySelector(`[data-slot="${i}"]`).value=selection[i]||'';draw()}});
+ return (a,r)=>{assets=a;records=r;if(!initialized&&a.length){root.querySelectorAll('[data-slot]').forEach((s,i)=>{s.innerHTML=(i>1?'<option value="">不添加</option>':'')+a.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');s.value=selection[i]||''});initialized=true}if(initialized)draw()};
+}

@@ -1,9 +1,10 @@
+import {mountComparison} from './comparison-view.mjs?v=20261006-compare';
 import {mountPerformance} from './performance-view.mjs?v=20261006-matrix';
 import {structureWatch} from './structure-watch.mjs?v=20261006-watch9';
 import {icon,marketIcon} from './icons.mjs';
 import {mountChart} from './chart.mjs?v=20261006-td9-ths';
 const $=s=>document.querySelector(s);
-for(const [id,name] of Object.entries({overview:'chart','structure-nav':'layers','performance-nav':'chart',watchlist:'star','source-nav':'database',export:'download',refresh:'refresh',help:'help',method:'compass','clear-filters':'close','reset-empty':'globe'})){
+for(const [id,name] of Object.entries({overview:'chart','structure-nav':'layers','performance-nav':'chart','comparison-nav':'layers',watchlist:'star','source-nav':'database',export:'download',refresh:'refresh',help:'help',method:'compass','clear-filters':'close','reset-empty':'globe'})){
  const el=$('#'+id);if(el){if(id==='help')el.innerHTML=icon(name);else el.insertAdjacentHTML('afterbegin',icon(name));}}
 $('.brand-icon').innerHTML=icon('globe');
 $('.search span').innerHTML=icon('search');
@@ -29,27 +30,31 @@ function captureFocus(root){
  return null;
 }
 function restoreFocus(root,selector){if(selector)root.querySelector(selector)?.focus({preventScroll:true})}
+const renderComparison=mountComparison($('#comparison-page'));
 let performanceReturn=null;
 const renderPerformance=mountPerformance($('#performance-page'),id=>{performanceReturn=id;showDetail(id,'week')});
 const isStructurePage=()=>location.hash==='#structures';
 function renderPage(){
- const watching=isStructurePage(),matrix=location.hash==='#performance';
+ const watching=isStructurePage(),matrix=location.hash==='#performance',comparison=location.hash==='#comparison';
+ $('#comparison-page').hidden=!comparison;
+ $('#comparison-nav').classList.toggle('active',comparison);$('#comparison-nav').setAttribute('aria-pressed',String(comparison));
  $('#performance-page').hidden=!matrix;
  $('#performance-nav').classList.toggle('active',matrix);$('#performance-nav').setAttribute('aria-pressed',String(matrix));
  $('#structures-page').hidden=!watching;
- for(const selector of ['.board','.view-selector','.notice','#export'])$(selector).hidden=watching||matrix;
- $('.heading-copy h1').textContent=matrix?'跨市场表现':watching?'九转观察':'全球枢轴观测站';
- $('.heading-copy p').textContent=matrix?'比较多周期表现，识别跨市场强弱变化。':watching?'跟踪最新九转与发展中序列，进入 K 线核验。':'以周与月为尺度，看清每一个关键价位。';
- $('#page-crumb').textContent=matrix?'跨市场表现':watching?'九转观察':'全球市场';
+ for(const selector of ['.board','.view-selector','.notice','#export'])$(selector).hidden=watching||matrix||comparison;
+ $('.heading-copy h1').textContent=comparison?'跨资产对照':matrix?'跨市场表现':watching?'九转观察':'全球枢轴观测站';
+ $('.heading-copy p').textContent=comparison?'对齐美元、利率、股票与商品，检验宏观研究线索。':matrix?'比较多周期表现，识别跨市场强弱变化。':watching?'跟踪最新九转与发展中序列，进入 K 线核验。':'以周与月为尺度，看清每一个关键价位。';
+ $('#page-crumb').textContent=comparison?'跨资产对照':matrix?'跨市场表现':watching?'九转观察':'全球市场';
  $('#structure-nav').classList.toggle('active',watching);$('#structure-nav').setAttribute('aria-pressed',String(watching));
- for(const id of ['overview','watchlist']){const active=!watching&&!matrix&&(id==='watchlist'?favoritesOnly:!favoritesOnly);$('#'+id).classList.toggle('active',active);$('#'+id).setAttribute('aria-pressed',String(active))}
- document.querySelectorAll('.market-link').forEach(b=>{const active=matrix?b.dataset.group===$('#performance-market').value:!watching&&b.dataset.group===group;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
- document.querySelectorAll('.mobile-pages a').forEach(a=>{if(a.hash===(matrix?'#performance':watching?'#structures':'#board'))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
- document.title=(matrix?'跨市场表现':watching?'九转观察':'全球枢轴看板')+' · Pivot Atlas';
+ for(const id of ['overview','watchlist']){const active=!watching&&!matrix&&!comparison&&(id==='watchlist'?favoritesOnly:!favoritesOnly);$('#'+id).classList.toggle('active',active);$('#'+id).setAttribute('aria-pressed',String(active))}
+ document.querySelectorAll('.market-link').forEach(b=>{const active=matrix?b.dataset.group===$('#performance-market').value:!watching&&!comparison&&b.dataset.group===group;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+ document.querySelectorAll('.mobile-pages a').forEach(a=>{if(a.hash===(comparison?'#comparison':matrix?'#performance':watching?'#structures':'#board'))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+ document.title=(comparison?'跨资产对照':matrix?'跨市场表现':watching?'九转观察':'全球枢轴看板')+' · Pivot Atlas';
 }
 function navigatePage(page){if(location.hash!=='#'+page)location.hash=page;renderPage()}
 window.addEventListener('hashchange',()=>{renderPage();window.scrollTo(0,0)});
 $('#performance-page').addEventListener('change',renderPage);
+$('#comparison-nav').onclick=()=>navigatePage('comparison');
 $('#performance-nav').onclick=()=>navigatePage('performance');
 $('#structure-nav').onclick=()=>navigatePage('structures');
 let structureExpanded=false,structureReturn=null;
@@ -66,6 +71,7 @@ function renderStructureWatch(){
 }
 $('#structure-toggle').addEventListener('click',()=>{structureExpanded=!structureExpanded;renderStructureWatch()});
 function render(){
+ renderComparison(assets,records);
  renderPerformance(assets,records,busy);
  renderStructureWatch();
  const rowFocus=captureFocus($('#table-body'));
