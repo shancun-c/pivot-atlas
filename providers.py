@@ -46,7 +46,7 @@ def clean(bars):
 def yahoo(a):
     for host in ('query1','query2'):
         try:
-            url=f'https://{host}.finance.yahoo.com/v8/finance/chart/{quote(a["symbol"],safe="")}?range=6mo&interval=1d'
+            url=f'https://{host}.finance.yahoo.com/v8/finance/chart/{quote(a["symbol"],safe="")}?range=1y&interval=1d'
             j=json.loads(fetch(url))['chart']
             if not j.get('result'):
                 raise ValueError('Yahoo 无此标的历史行情')
@@ -65,7 +65,7 @@ def yahoo(a):
 
 
 def eastmoney(a):
-    params=dict(secid=a['em'],klt=101,fqt=0,beg='20250101',end='20500101',lmt=220,
+    params=dict(secid=a['em'],klt=101,fqt=0,beg='20250101',end='20500101',lmt=500,
                 fields1='f1,f2,f3,f4,f5,f6',fields2='f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61')
     r=json.loads(fetch('https://push2his.eastmoney.com/api/qt/stock/kline/get?'+urlencode(params))).get('data')
     if not r or not r.get('klines'):
@@ -81,7 +81,7 @@ def sina(a):
     url='https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var%20_data=/'+service+'?'+urlencode({'symbol':a['symbol'],'source':'web'})
     raw=fetch(url); rows=json.loads(raw[raw.index('['):raw.rindex(']')+1])
     bars=clean([dict(date=b.get('d',b.get('date',''))[:10],open=b.get('o',b.get('open')),high=b.get('h',b.get('high')),low=b.get('l',b.get('low')),close=b.get('c',b.get('close'))) for b in rows])
-    return dict(bars=bars[-220:],source='新浪财经',sourceUrl='https://finance.sina.com.cn/futures/',
+    return dict(bars=bars[-500:],source='新浪财经',sourceUrl='https://finance.sina.com.cn/futures/',
                 timezone='Asia/Shanghai' if a['provider']=='sina' else 'America/New_York',upstreamSymbol=a['symbol'])
 
 
@@ -89,7 +89,7 @@ def bond(a):
     global BOND_CACHE
     with BOND_LOCK:
         if BOND_CACHE is None or datetime.now(timezone.utc).timestamp()-BOND_CACHE[0]>900:
-            url='https://datacenter.eastmoney.com/api/data/v1/get?'+urlencode(dict(reportName='RPTA_WEB_TREASURYYIELD',columns='ALL',sortColumns='SOLAR_DATE',sortTypes=-1,pageSize=200,pageNumber=1))
+            url='https://datacenter.eastmoney.com/api/data/v1/get?'+urlencode(dict(reportName='RPTA_WEB_TREASURYYIELD',columns='ALL',sortColumns='SOLAR_DATE',sortTypes=-1,pageSize=500,pageNumber=1))
             BOND_CACHE=(datetime.now(timezone.utc).timestamp(),json.loads(fetch(url))['result']['data'])
         rows=BOND_CACHE[1]
     bars=clean([dict(date=r['SOLAR_DATE'][:10],high=r[a['field']],low=r[a['field']],close=r[a['field']]) for r in rows if r.get(a['field']) is not None])
@@ -99,7 +99,7 @@ def bond(a):
 
 def tencent(a):
     symbol=a['qq']
-    url='https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?'+urlencode({'param':f'{symbol},day,,,220,'})
+    url='https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?'+urlencode({'param':f'{symbol},day,,,500,'})
     payload=json.loads(fetch(url))
     data=payload.get('data',{}).get(symbol,{})
     rows=data.get('day',[])
@@ -122,17 +122,22 @@ def sina_forex(a):
     rows=[r.split(',') for r in json.loads(match.group(1)).split('|')]
     bars=clean([dict(date=r[0],open=r[1],low=r[2],high=r[3],close=r[4]) for r in rows if len(r)>=5])
     if len(bars)<10:raise ValueError('新浪外汇历史不足')
-    return dict(bars=bars[-220:],source='新浪财经 · 外汇',sourceUrl='https://finance.sina.com.cn/money/forex/hq/USDCNH.shtml',
+    return dict(bars=bars[-500:],source='新浪财经 · 外汇',sourceUrl='https://finance.sina.com.cn/money/forex/hq/USDCNH.shtml',
                 timezone='UTC',upstreamSymbol=symbol,
                 sourceName='美元兑离岸人民币',sessionNote='沿用供应商日线日期，外汇日界尚未按交易所日历核验')
 
 
 def coinbase(a):
     end=datetime.now(timezone.utc).replace(hour=0,minute=0,second=0,microsecond=0)
-    start=end-timedelta(days=220)
-    url='https://api.exchange.coinbase.com/products/'+quote(a['symbol'],safe='')+'/candles?'+urlencode(dict(granularity=86400,start=start.isoformat(),end=end.isoformat()))
-    rows=json.loads(fetch(url))
-    if not isinstance(rows,list):raise ValueError('Coinbase 未返回日线数组')
+    start=end-timedelta(days=500)
+    rows=[]
+    for offset in (0,250):
+        batch_start=start+timedelta(days=offset)
+        batch_end=batch_start+timedelta(days=250)
+        url='https://api.exchange.coinbase.com/products/'+quote(a['symbol'],safe='')+'/candles?'+urlencode(dict(granularity=86400,start=batch_start.isoformat(),end=batch_end.isoformat()))
+        batch=json.loads(fetch(url))
+        if not isinstance(batch,list):raise ValueError('Coinbase 未返回日线数组')
+        rows.extend(batch)
     bars=clean([dict(date=datetime.fromtimestamp(r[0],timezone.utc).date().isoformat(),low=r[1],high=r[2],open=r[3],close=r[4]) for r in rows if isinstance(r,list) and len(r)>=5 and start.timestamp()<=r[0]<end.timestamp()])
     if len(bars)<10:raise ValueError('Coinbase 历史日线不足')
     return dict(bars=bars,source='Coinbase Exchange',sourceUrl='https://exchange.coinbase.com/trade/'+a['symbol'],timezone='UTC',upstreamSymbol=a['symbol'],sessionNote='24/7 现货；UTC 日界；仅包含已结束日线')
