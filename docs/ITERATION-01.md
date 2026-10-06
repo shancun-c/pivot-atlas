@@ -13,3 +13,8 @@
 
 ## Delivery
 Migrate local project with compatibility symlink. Private GitHub repository; ignore caches, credentials, venv, server inventory and screenshot artifacts. CI runs Python and Node tests. Release only app files to a new server directory, retain previous release and persistent cache. No changes to other services.
+
+## Verification
+31 Node tests and 39 Python tests passed locally. GitHub Actions passed after matching CI to Python3.12. Browser checked US equities / 1M sorting, sovereign yield bp, chart drilldown and focus return, and 390px no whole-page overflow. Sidebar market selection now targets the matrix when that page is active. Existing pivots and nine-turn calculation modules unchanged.
+
+Context7 was not callable in this session; GitHub Actions configuration was checked against official setup-node/setup-python documentation and the workflow was actually executed. No third-party chart or calculation dependency introduced.
