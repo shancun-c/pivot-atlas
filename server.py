@@ -43,13 +43,13 @@ def get_asset(a, force=False):
         failure=FAILURES.get(a['id'])
         cooldown=bool(failure and time.time()<failure['retryAt'])
         error=failure['error'] if cooldown else None
-        if not cooldown and (force or failure is not None or cached is None or cached.get('schemaVersion') != 2 or time.time()-cached['fetchedAtEpoch']>900):
+        if not cooldown and (force or failure is not None or cached is None or cached.get('schemaVersion') != 3 or time.time()-cached['fetchedAtEpoch']>900):
             try:
                 with GATE:data=load(a)
                 if not data.get('bars'):raise ValueError('上游返回空日线')
                 if cached and data['bars'][-1]['date']<cached['bars'][-1]['date']:
                     raise ValueError('上游日线日期倒退，保留较新的缓存')
-                cached={**data,'schemaVersion':2,'fetchedAtEpoch':time.time(),'fetchedAt':datetime.now(timezone.utc).isoformat()}
+                cached={**data,'schemaVersion':3,'fetchedAtEpoch':time.time(),'fetchedAt':datetime.now(timezone.utc).isoformat()}
                 path.write_text(json.dumps(cached,ensure_ascii=False))
                 CACHE[a['id']]=cached
                 FAILURES.pop(a['id'],None)

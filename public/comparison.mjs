@@ -1,3 +1,4 @@
+import {researchSeries} from './research-series.mjs';
 import {validDate} from './research-state.mjs';
 import {change} from './performance.mjs';
 const day=86400000;
@@ -13,9 +14,10 @@ export function compareAssets(assets,records,days=90,range={}){
  for(const asset of assets){
   const r=records.get(asset.id);
   if(!r||r.status!=='ok'||r.error||!r.asOf)return {error:`${asset.name}：${r?.statusLabel||r?.error||'等待有效行情'}。本组对照暂不计算。`};
-  const bars=(r.history||[]).filter(b=>b.date<r.asOf);
+  const research=researchSeries(asset,r);if(research.error)return {error:`${asset.name}：${research.error}`} ;
+  const bars=research.history.filter(b=>b.date<r.asOf);
   if(!bars.length||bars.some((b,i)=>!Number.isFinite(b.close)||(asset.unit!=='%'&&b.close<=0)||(i&&b.date<=bars[i-1].date)))return {error:`${asset.name}：日线不足、顺序异常或价格非正。`};
-  series.push({asset,bars,map:new Map(bars.map(b=>[b.date,b.close])),source:r.source,latest:bars.at(-1).date});
+  series.push({asset,bars,map:new Map(bars.map(b=>[b.date,b.close])),source:research.source,basis:research.label,latest:bars.at(-1).date});
  }
  const end=range.end||series.map(s=>s.latest).sort()[0];
  const start=range.start||new Date(Date.parse(end+'T00:00:00Z')-days*day).toISOString().slice(0,10);

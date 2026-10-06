@@ -1,5 +1,5 @@
-import {mountComparison} from './comparison-view.mjs?v=20261006-research3';
-import {mountPerformance} from './performance-view.mjs?v=20261006-research3';
+import {mountComparison} from './comparison-view.mjs?v=20261006-research4';
+import {mountPerformance} from './performance-view.mjs?v=20261006-research4';
 import {structureWatch} from './structure-watch.mjs?v=20261006-watch9';
 import {icon,marketIcon} from './icons.mjs';
 import {mountChart} from './chart.mjs?v=20261006-td9-ths';
@@ -32,7 +32,7 @@ function captureFocus(root){
 function restoreFocus(root,selector){if(selector)root.querySelector(selector)?.focus({preventScroll:true})}
 const renderComparison=mountComparison($('#comparison-page'));
 let performanceReturn=null;
-const renderPerformance=mountPerformance($('#performance-page'),id=>{performanceReturn=id;showDetail(id,'week')},ids=>{renderComparison.select(ids);location.hash='#comparison'});
+const renderPerformance=mountPerformance($('#performance-page'),id=>{performanceReturn=id;showDetail(id,'week')},config=>{renderComparison.select(config);location.hash='#comparison'});
 const isStructurePage=()=>location.hash==='#structures';
 function renderPage(){
  const watching=isStructurePage(),matrix=location.hash==='#performance',comparison=location.hash==='#comparison';

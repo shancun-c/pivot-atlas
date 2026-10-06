@@ -34,7 +34,7 @@ class ServiceTests(unittest.TestCase):
         with patch.object(server,'load',return_value=self.payload) as loader:
             result=server.get_asset(self.a)
             self.assertEqual(loader.call_count,1)
-            self.assertEqual(result['schemaVersion'],2)
+            self.assertEqual(result['schemaVersion'],3)
 
     def test_force_bypasses_fresh_cache(self):
         with patch.object(server,'load',return_value=self.payload) as loader:

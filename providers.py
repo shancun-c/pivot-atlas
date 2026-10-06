@@ -7,6 +7,7 @@ import threading
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlencode, quote
 from zoneinfo import ZoneInfo
+from research import yahoo_research, validate_split_boundaries
 
 BOND_LOCK = threading.Lock()
 BOND_CACHE = None
@@ -57,7 +58,7 @@ def yahoo(a):
                         for i,t in enumerate(r.get('timestamp',[]))])
             if len(bars)<10:
                 raise ValueError('Yahoo 历史日线不足')
-            return {'bars':bars,'source':'Yahoo Finance','sourceUrl':f'https://finance.yahoo.com/quote/{quote(a["symbol"],safe="")}/history/',
+            return {'bars':bars,'research':yahoo_research(a,r,bars),'source':'Yahoo Finance','sourceUrl':f'https://finance.yahoo.com/quote/{quote(a["symbol"],safe="")}/history/',
                     'timezone':tz,'sourceName':meta.get('shortName',''), 'upstreamSymbol':a['symbol']}
         except (ValueError, KeyError, IndexError) as e:
             error=e
@@ -143,7 +144,7 @@ def coinbase(a):
     return dict(bars=bars,source='Coinbase Exchange',sourceUrl='https://exchange.coinbase.com/trade/'+a['symbol'],timezone='UTC',upstreamSymbol=a['symbol'],sessionNote='24/7 现货；UTC 日界；仅包含已结束日线')
 
 
-def load(a):
+def load_quote(a):
     kind=a.get('provider','yahoo')
     if kind=='coinbase':return coinbase(a)
     if kind=='bond':return bond(a)
@@ -164,3 +165,25 @@ def load(a):
         except (ValueError,KeyError,IndexError,TypeError,subprocess.TimeoutExpired) as exc:
             failures.append(f'{name}：{exc}' if not isinstance(exc,subprocess.TimeoutExpired) else f'{name}：请求超时')
     raise ValueError('；'.join(failures))
+
+
+def load(a):
+    data=load_quote(a)
+    if a.get('researchClass')=='fund':
+        if a.get('researchQQ'):
+            try:
+                symbol=a['researchQQ']
+                url='https://proxy.finance.qq.com/ifzqgtimg/appstock/app/newfqkline/get?'+urlencode({'param':f'{symbol},day,,,500,qfq'})
+                rows=json.loads(fetch(url))['data'][symbol]['qfqday']
+                history=[{'date':r[0],'close':float(r[2])} for r in rows]
+                if len(history)<10 or any(not math.isfinite(b['close']) or b['close']<=0 or (i and b['date']<=history[i-1]['date']) for i,b in enumerate(history)):
+                    raise ValueError('复权序列长度、顺序或数值无效')
+                validate_split_boundaries(a,history)
+                if history[-1]['date']!=data['bars'][-1]['date']:
+                    raise ValueError('复权序列与报价最新日期不一致')
+                data['research']={'status':'ok','basis':'fund-adjusted','label':'基金前复权表现（供应商口径）','source':'腾讯财经 · 前复权','history':history}
+            except (ValueError,KeyError,IndexError,TypeError,subprocess.TimeoutExpired) as exc:
+                data['research']={'status':'unavailable','error':'复权序列不可用：'+str(exc),'history':[]}
+        if not data.get('research'):
+            data['research']={'status':'unavailable','error':'当前来源未提供独立复权序列','history':[]}
+    return data
