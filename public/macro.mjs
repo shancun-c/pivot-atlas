@@ -14,10 +14,10 @@ export function macroIndicator(def,treasury,records,days=90,alignedDates=null){
   return {id,r,bars:raw.map(b=>({date:b.date,value:def.ratio?b.close:b[def.fields[i]]}))};
  });
  const sources=dependencies.map(({id,r,bars})=>({id,name:r?.source||id,url:r?.sourceUrl,date:bars.at(-1)?.date,fetchedAt:r?.fetchedAt,status:r?.status||'loading'}));
- const fail=error=>({...def,error,sources});
+ const fail=(error,errorKind='invalid')=>({...def,error,errorKind,sources});
  for(const {id,r,bars} of dependencies){
-  if(!r)return fail('等待 '+id+' 数据');
-  if(r.status!=='ok'||r.error)return fail((r.source||id)+'：'+(r.error||r.statusLabel||'来源不可用'));
+  if(!r)return fail('等待 '+id+' 数据','loading');
+  if(r.status!=='ok'||r.error)return fail((r.source||id)+'：'+(r.error||r.statusLabel||'来源不可用'),'source');
   if(def.ratio&&!r.asOf)return fail(id+'：缺少日线日期边界');
   if(!bars.length||bars.some((b,i)=>!validDate(b.date)||!Number.isFinite(b.value)||(def.ratio&&b.value<=0)||(i>0&&b.date<=bars[i-1].date)))return fail(id+'：观测缺失、顺序异常或数值无效');
  }
@@ -25,7 +25,7 @@ export function macroIndicator(def,treasury,records,days=90,alignedDates=null){
  const requestedStart=new Date(Date.parse(end+'T00:00:00Z')-days*86400000).toISOString().slice(0,10);
  const maps=dependencies.map(s=>new Map(s.bars.map(b=>[b.date,b.value])));
  const dates=dependencies[0].bars.map(b=>b.date).filter(d=>(alignedDates?alignedDates.includes(d):d>=requestedStart&&d<=end)&&maps.every(m=>m.has(d)));
- if(dates.length<2)return fail('窗口内不足两个共同日期；请扩大窗口或核查来源。');
+ if(dates.length<2)return fail('窗口内不足两个共同日期；请扩大窗口或核查来源。','history');
  const components=dates.map(d=>maps.map(m=>m.get(d)));
  const raw=dates.map(d=>{const v=maps.map(m=>m.get(d));return def.ratio?v[0]/v[1]:v.length===1?v[0]:(v[0]-v[1])*(def.unit==='bp'?100:1)});
  if(!raw.every(Number.isFinite))return fail('计算结果非有限值');
@@ -40,8 +40,8 @@ export function macroStudy(treasury,records,days=90,common=true){
  if(!common)return indicators.map(d=>macroIndicator(d,treasury,records,days));
  const full=indicators.map(d=>macroIndicator(d,treasury,records,10000));
  const failed=full.filter(r=>r.error);
- const fail=message=>full.map(r=>({...r,error:message,dates:undefined}));
- if(failed.length)return fail('共同日期模式等待全部六项指标：'+failed.map(r=>r.name+'（'+r.error+'）').join('；')+'。可切换“各图独立日期”查看可用指标。');
+ const fail=(message,errorKind='history')=>full.map(r=>({...r,error:message,errorKind,dates:undefined}));
+ if(failed.length){const kind=failed.some(r=>r.errorKind==='source')?'source':failed.some(r=>r.errorKind==='loading')?'loading':failed[0].errorKind;return fail(kind==='loading'?'正在加载共同日期所需数据，请稍候。':'共同日期不可用：'+failed.map(r=>r.name+'（'+r.error+'）').join('；')+'。可切换独立日期查看其余指标。',kind)}
  const sets=full.map(r=>new Set(r.dates));
  let dates=full[0].dates.filter(d=>sets.every(s=>s.has(d)));
  if(dates.length<2)return fail('全部指标不足两个共同日期；请切换各图独立日期。');

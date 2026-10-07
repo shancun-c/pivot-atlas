@@ -1,4 +1,4 @@
-import {mountMacro} from './macro-view.mjs?v=20261007-macro3a';
+import {mountMacro} from './macro-view.mjs?v=20261007-macro4a';
 import {researchHealth} from './performance.mjs';
 import {mountComparison} from './comparison-view.mjs?v=20261007-research5';
 import {mountPerformance} from './performance-view.mjs?v=20261007-research5';
