@@ -1,3 +1,4 @@
+import {mountMacro} from './macro-view.mjs?v=20261007-macro1a';
 import {researchHealth} from './performance.mjs';
 import {mountComparison} from './comparison-view.mjs?v=20261007-research5';
 import {mountPerformance} from './performance-view.mjs?v=20261007-research5';
@@ -5,7 +6,7 @@ import {structureWatch} from './structure-watch.mjs?v=20261006-watch9';
 import {icon,marketIcon} from './icons.mjs';
 import {mountChart} from './chart.mjs?v=20261006-td9-ths';
 const $=s=>document.querySelector(s);
-for(const [id,name] of Object.entries({overview:'chart','structure-nav':'layers','performance-nav':'chart','comparison-nav':'layers',watchlist:'star','source-nav':'database',export:'download',refresh:'refresh',help:'help',method:'compass','clear-filters':'close','reset-empty':'globe'})){
+for(const [id,name] of Object.entries({overview:'chart','structure-nav':'layers','performance-nav':'chart','macro-nav':'compass','comparison-nav':'layers',watchlist:'star','source-nav':'database',export:'download',refresh:'refresh',help:'help',method:'compass','clear-filters':'close','reset-empty':'globe'})){
  const el=$('#'+id);if(el){if(id==='help')el.innerHTML=icon(name);else el.insertAdjacentHTML('afterbegin',icon(name));}}
 $('.brand-icon').innerHTML=icon('globe');
 $('.search span').innerHTML=icon('search');
@@ -32,11 +33,12 @@ function captureFocus(root){
  return null;
 }
 function restoreFocus(root,selector){if(selector)root.querySelector(selector)?.focus({preventScroll:true})}
+const renderMacro=mountMacro($('#macro-page'));
 const researchSummaries={};
  document.addEventListener('research-summary',e=>{researchSummaries[e.detail.kind]=e.detail;renderResearchMetrics()});
  function renderResearchMetrics(){
   const matrix=location.hash==='#performance',comparison=location.hash==='#comparison';
-  $('.metrics').hidden=matrix||comparison;const root=$('#research-metrics');root.hidden=!(matrix||comparison);if(root.hidden)return;
+  $('.metrics').hidden=matrix||comparison||location.hash==='#macro';const root=$('#research-metrics');root.hidden=!(matrix||comparison);if(root.hidden)return;
   const h=researchHealth(assets,records),current=researchSummaries[matrix?'matrix':'comparison'];
   const dates=matrix?current?.dates:current?.result?.dates;
   const availability=matrix?`${current?.valid||0} / ${current?.total||0}`:current?.result?.error?'暂不可计算':`${current?.result?.lines?.length||0} 个标的`;
@@ -48,25 +50,29 @@ const renderPerformance=mountPerformance($('#performance-page'),id=>{performance
 const isStructurePage=()=>location.hash==='#structures';
 function renderPage(){
  renderResearchMetrics();
+ const macro=location.hash==='#macro';
+ $('#macro-page').hidden=!macro;$('#macro-nav').classList.toggle('active',macro);$('#macro-nav').setAttribute('aria-pressed',String(macro));
+ if(macro)renderMacro.activate();
  const watching=isStructurePage(),matrix=location.hash==='#performance',comparison=location.hash==='#comparison';
  $('#comparison-page').hidden=!comparison;
  $('#comparison-nav').classList.toggle('active',comparison);$('#comparison-nav').setAttribute('aria-pressed',String(comparison));
  $('#performance-page').hidden=!matrix;
  $('#performance-nav').classList.toggle('active',matrix);$('#performance-nav').setAttribute('aria-pressed',String(matrix));
  $('#structures-page').hidden=!watching;
- for(const selector of ['.board','.view-selector','.notice','#export'])$(selector).hidden=watching||matrix||comparison;
- $('.heading-copy h1').textContent=comparison?'跨资产对照':matrix?'跨市场表现':watching?'九转观察':'全球枢轴观测站';
- $('.heading-copy p').textContent=comparison?'对齐美元、利率、股票与商品，检验宏观研究线索。':matrix?'比较多周期表现，识别跨市场强弱变化。':watching?'跟踪最新九转与发展中序列，进入 K 线核验。':'以周与月为尺度，看清每一个关键价位。';
- $('#page-crumb').textContent=comparison?'跨资产对照':matrix?'跨市场表现':watching?'九转观察':'全球市场';
+ for(const selector of ['.board','.view-selector','.notice','#export'])$(selector).hidden=watching||matrix||comparison||macro;
+ $('.heading-copy h1').textContent=macro?'宏观传导':comparison?'跨资产对照':matrix?'跨市场表现':watching?'九转观察':'全球枢轴观测站';
+ $('.heading-copy p').textContent=macro?'从利率分解与相对强弱，追踪跨市场定价线索。':comparison?'对齐美元、利率、股票与商品，检验宏观研究线索。':matrix?'比较多周期表现，识别跨市场强弱变化。':watching?'跟踪最新九转与发展中序列，进入 K 线核验。':'以周与月为尺度，看清每一个关键价位。';
+ $('#page-crumb').textContent=macro?'宏观传导':comparison?'跨资产对照':matrix?'跨市场表现':watching?'九转观察':'全球市场';
  $('#structure-nav').classList.toggle('active',watching);$('#structure-nav').setAttribute('aria-pressed',String(watching));
- for(const id of ['overview','watchlist']){const active=!watching&&!matrix&&!comparison&&(id==='watchlist'?favoritesOnly:!favoritesOnly);$('#'+id).classList.toggle('active',active);$('#'+id).setAttribute('aria-pressed',String(active))}
- document.querySelectorAll('.market-link').forEach(b=>{const active=matrix?b.dataset.group===$('#performance-market').value:!watching&&!comparison&&b.dataset.group===group;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
- document.querySelectorAll('.mobile-pages a').forEach(a=>{if(a.hash===(comparison?'#comparison':matrix?'#performance':watching?'#structures':'#board'))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
- document.title=(comparison?'跨资产对照':matrix?'跨市场表现':watching?'九转观察':'全球枢轴看板')+' · Pivot Atlas';
+ for(const id of ['overview','watchlist']){const active=!watching&&!matrix&&!comparison&&!macro&&(id==='watchlist'?favoritesOnly:!favoritesOnly);$('#'+id).classList.toggle('active',active);$('#'+id).setAttribute('aria-pressed',String(active))}
+ document.querySelectorAll('.market-link').forEach(b=>{const active=matrix?b.dataset.group===$('#performance-market').value:!watching&&!comparison&&!macro&&b.dataset.group===group;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+ document.querySelectorAll('.mobile-pages a').forEach(a=>{if(a.hash===(macro?'#macro':comparison?'#comparison':matrix?'#performance':watching?'#structures':'#board'))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+ document.title=(macro?'宏观传导':comparison?'跨资产对照':matrix?'跨市场表现':watching?'九转观察':'全球枢轴看板')+' · Pivot Atlas';
 }
 function navigatePage(page){if(location.hash!=='#'+page)location.hash=page;renderPage()}
 window.addEventListener('hashchange',()=>{renderPage();window.scrollTo(0,0)});
 $('#performance-page').addEventListener('change',renderPage);
+$('#macro-nav').onclick=()=>navigatePage('macro');
 $('#comparison-nav').onclick=()=>navigatePage('comparison');
 $('#performance-nav').onclick=()=>navigatePage('performance');
 $('#structure-nav').onclick=()=>navigatePage('structures');
@@ -84,6 +90,7 @@ function renderStructureWatch(){
 }
 $('#structure-toggle').addEventListener('click',()=>{structureExpanded=!structureExpanded;renderStructureWatch()});
 function render(){
+ renderMacro(assets,records);
  renderComparison(assets,records);
  renderPerformance(assets,records,busy);
  renderStructureWatch();

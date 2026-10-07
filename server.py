@@ -8,6 +8,7 @@ import os
 import threading
 import time
 from providers import load
+from macro_data import get_macro
 from market_periods import build_views, calendar_name, sessions
 
 ROOT=Path(__file__).resolve().parent
@@ -76,6 +77,7 @@ class Handler(SimpleHTTPRequestHandler):
     def __init__(self,*args,**kwargs):super().__init__(*args,directory=str(ROOT/'public'),**kwargs)
     def do_GET(self):
         route=urlparse(self.path).path
+        if route=='/api/macro':return self.respond(get_macro(CACHE_DIR,force=parse_qs(urlparse(self.path).query).get('refresh')==['1']))
         if route=='/api/assets':return self.respond(ASSETS)
         if route.startswith('/api/asset/'):
             a=BY_ID.get(route.rsplit('/',1)[-1])
