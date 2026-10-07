@@ -7,7 +7,7 @@ export const indicators=[
  {id:'growth',group:'跨资产相对强弱',name:'纳斯达克100 / 标普500',inputs:['ndx','spx'],ratio:true,unit:'起点100',note:'指数价格比值标准化。上升仅表示纳指相对标普更强；指数成分重叠，非纯成长因子或组合回报。'},
  {id:'copperGold',group:'跨资产相对强弱',name:'COMEX 铜 / 黄金',inputs:['hg','gc'],ratio:true,unit:'起点100',note:'美元/磅铜价除以美元/盎司金价，再标准化。连续近月换月可能造成跳变，非可交易价差，也不是独立增长预测。'}
 ];
-export function macroIndicator(def,treasury,records,days=90){
+export function macroIndicator(def,treasury,records,days=90,alignedDates=null){
  const dependencies=def.inputs.map((id,i)=>{
   const r=def.ratio?records.get(id):treasury?.[id];
   const raw=(r?.history||[]).filter(b=>!def.ratio||b.date<r.asOf).filter(b=>def.ratio||b[def.fields[i]]!==undefined);
@@ -24,7 +24,7 @@ export function macroIndicator(def,treasury,records,days=90){
  const end=dependencies.map(s=>s.bars.at(-1).date).sort()[0];
  const requestedStart=new Date(Date.parse(end+'T00:00:00Z')-days*86400000).toISOString().slice(0,10);
  const maps=dependencies.map(s=>new Map(s.bars.map(b=>[b.date,b.value])));
- const dates=dependencies[0].bars.map(b=>b.date).filter(d=>d>=requestedStart&&d<=end&&maps.every(m=>m.has(d)));
+ const dates=dependencies[0].bars.map(b=>b.date).filter(d=>(alignedDates?alignedDates.includes(d):d>=requestedStart&&d<=end)&&maps.every(m=>m.has(d)));
  if(dates.length<2)return fail('窗口内不足两个共同日期；请扩大窗口或核查来源。');
  const components=dates.map(d=>maps.map(m=>m.get(d)));
  const raw=dates.map(d=>{const v=maps.map(m=>m.get(d));return def.ratio?v[0]/v[1]:v.length===1?v[0]:(v[0]-v[1])*(def.unit==='bp'?100:1)});
@@ -33,4 +33,33 @@ export function macroIndicator(def,treasury,records,days=90){
  const delta=def.ratio?(raw.at(-1)/raw[0]-1)*100:(raw.at(-1)-raw[0])*(def.unit==='%'?100:1);
  return {...def,sources,dates,raw,values,components,delta,deltaUnit:def.ratio?'%':'bp',latest:values.at(-1),requestedStart,
   omitted:dependencies.map(s=>s.bars.filter(b=>b.date>=dates[0]&&b.date<=dates.at(-1)&&!dates.includes(b.date)).length)};
+}
+
+// Common mode uses the intersection of all six indicators before setting the window.
+export function macroStudy(treasury,records,days=90,common=true){
+ if(!common)return indicators.map(d=>macroIndicator(d,treasury,records,days));
+ const full=indicators.map(d=>macroIndicator(d,treasury,records,10000));
+ const failed=full.filter(r=>r.error);
+ const fail=message=>full.map(r=>({...r,error:message,dates:undefined}));
+ if(failed.length)return fail('共同日期模式等待全部六项指标：'+failed.map(r=>r.name+'（'+r.error+'）').join('；')+'。可切换“各图独立日期”查看可用指标。');
+ const sets=full.map(r=>new Set(r.dates));
+ let dates=full[0].dates.filter(d=>sets.every(s=>s.has(d)));
+ if(dates.length<2)return fail('全部指标不足两个共同日期；请切换各图独立日期。');
+ const start=new Date(Date.parse(dates.at(-1)+'T00:00:00Z')-days*86400000).toISOString().slice(0,10);
+ dates=dates.filter(d=>d>=start);
+ if(dates.length<2)return fail('所选窗口不足两个共同日期；请扩大窗口。');
+ return indicators.map(d=>({...macroIndicator(d,treasury,records,days,dates),requestedStart:start}));
+}
+export function macroBreakdown(r){
+ if(r.error)return null;
+ const first=r.components[0],last=r.components.at(-1);
+ const change=first.map((v,i)=>r.ratio?(last[i]/v-1)*100:(last[i]-v)*100);
+ if(r.id==='slope')return {labels:['2Y 变化','10Y 变化','利差变化'],values:[change[1],change[0],r.delta],unit:'bp',formula:'利差变化 = 10Y 变化 − 2Y 变化'};
+ if(r.id==='breakeven')return {labels:['实际利率变化','盈亏平衡变化','名义10Y变化'],values:[change[1],r.delta,change[0]],unit:'bp',formula:'名义10Y变化 = 实际利率变化 + 盈亏平衡变化'};
+ if(r.ratio)return {labels:r.id==='growth'?['纳斯达克100','标普500','比值变化']:['COMEX 铜','COMEX 黄金','比值变化'],values:[...change,r.delta],unit:'%',formula:'比值变化 = (1 + 分子涨跌幅) ÷ (1 + 分母涨跌幅) − 1；不能直接相减'};
+ return null;
+}
+export function macroComparison(r){
+ if(r.error||!r.ratio)return null;
+ return {selection:r.inputs,days:90,range:{start:r.dates[0],end:r.dates.at(-1)},origin:'来自宏观传导 · 已锁定比值研究区间。'};
 }

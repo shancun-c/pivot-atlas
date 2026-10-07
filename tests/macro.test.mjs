@@ -13,3 +13,26 @@ test('ratio only intersects closed bars, normalizes and rejects zero denominator
  r.set('spx',quote([50,0,1]));assert.ok(calc('growth',{},r).error);
 });
 test('one observation and malformed input do not produce charts',()=>{assert.ok(calc('short',{nominal:{...nominal,history:nominal.history.slice(0,1)}}).error);assert.ok(calc('short',{nominal:{...nominal,history:[...nominal.history,nominal.history[0]]}}).error);assert.ok(calc('short',{nominal:{...nominal,history:[{date:'2026-09-01',BC_2YEAR:NaN}]}}).error)});
+
+import {macroStudy,macroBreakdown,macroComparison} from '../public/macro.mjs';
+const quotes=()=>new Map(['ndx','spx','hg','gc'].map((id,j)=>[id,{status:'ok',asOf:'2026-09-04',history:[{date:'2026-09-02',close:100+j},{date:'2026-09-03',close:110+j}]}]));
+test('common mode intersects all six dates and normalizes each ratio at the shared start',()=>{
+ const t={nominal,real:{...real,history:[{date:'2026-09-02',TC_10YEAR:-.3},{date:'2026-09-03',TC_10YEAR:-.2}]}};
+ const all=macroStudy(t,quotes(),90,true);
+ for(const r of all){assert.equal(r.error,undefined);assert.deepEqual(r.dates,['2026-09-02','2026-09-03']);if(r.ratio)assert.equal(r.values[0],100)}
+ assert.equal(macroStudy(t,quotes(),90,false)[0].dates[0],'2026-09-01');
+ const q=quotes();q.get('gc').status='stale';assert.ok(macroStudy(t,q,90,true).every(r=>r.error));assert.equal(macroStudy(t,q,90,false)[0].error,undefined);
+});
+test('one common date blocks shared mode without inventing observations',()=>{assert.ok(macroStudy({nominal,real},quotes(),90,true).every(r=>r.error))});
+test('curve and inflation decomposition reconcile with negative rates and signed changes',()=>{
+ const s=macroBreakdown(calc('slope')),b=macroBreakdown(calc('breakeven'));
+ assert.ok(Math.abs(s.values[1]-s.values[0]-s.values[2])<1e-8);
+ assert.ok(Math.abs(b.values[0]+b.values[1]-b.values[2])<1e-8);
+});
+test('ratio decomposition uses multiplicative returns and comparison preserves exact endpoints',()=>{
+ const q=quotes();q.get('spx').history[1].close=90;
+ const r=calc('growth',{},q),b=macroBreakdown(r);
+ assert.ok(Math.abs(((1+b.values[0]/100)/(1+b.values[1]/100)-1)*100-b.values[2])<1e-8);
+ assert.ok(b.values[1]<0);assert.deepEqual(macroComparison(r).range,{start:'2026-09-02',end:'2026-09-03'});
+ assert.deepEqual(macroComparison(r).selection,['ndx','spx']);assert.equal(macroComparison({...r,error:'bad'}),null);
+});

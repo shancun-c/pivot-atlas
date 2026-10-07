@@ -1,4 +1,4 @@
-import {mountMacro} from './macro-view.mjs?v=20261007-macro1a';
+import {mountMacro} from './macro-view.mjs?v=20261007-macro2a';
 import {researchHealth} from './performance.mjs';
 import {mountComparison} from './comparison-view.mjs?v=20261007-research5';
 import {mountPerformance} from './performance-view.mjs?v=20261007-research5';
@@ -33,7 +33,7 @@ function captureFocus(root){
  return null;
 }
 function restoreFocus(root,selector){if(selector)root.querySelector(selector)?.focus({preventScroll:true})}
-const renderMacro=mountMacro($('#macro-page'));
+const renderMacro=mountMacro($('#macro-page'),config=>{renderComparison.select(config);location.hash='#comparison'});
 const researchSummaries={};
  document.addEventListener('research-summary',e=>{researchSummaries[e.detail.kind]=e.detail;renderResearchMetrics()});
  function renderResearchMetrics(){
