@@ -63,3 +63,19 @@ export function macroComparison(r){
  if(r.error||!r.ratio)return null;
  return {selection:r.inputs,days:90,range:{start:r.dates[0],end:r.dates.at(-1)},origin:'来自宏观传导 · 已锁定比值研究区间。'};
 }
+
+export function macroRecent(r,periods=[1,5,20]){
+ return periods.map(n=>{
+  if(r.error||!r.dates||r.dates.length<=n)return {n,error:'不足 '+(n+1)+' 个有效观测'};
+  const i=r.dates.length-1-n,last=r.raw.at(-1),first=r.raw[i];
+  return {n,start:r.dates[i],end:r.dates.at(-1),value:r.ratio?(last/first-1)*100:(last-first)*(r.unit==='%'?100:1),unit:r.ratio?'%':'bp'};
+ });
+}
+export function macroRefreshInputs(group,common){
+ return [...new Set(indicators.filter(r=>common||r.group===group).flatMap(r=>r.inputs))];
+}
+export function macroNearestDate(dates,date){
+ const target=Date.parse(date);if(!dates.length||!Number.isFinite(target))return -1;
+ let best=0;for(let i=1;i<dates.length;i++)if(Math.abs(Date.parse(dates[i])-target)<Math.abs(Date.parse(dates[best])-target))best=i;
+ return best;
+}

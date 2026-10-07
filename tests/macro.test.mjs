@@ -36,3 +36,24 @@ test('ratio decomposition uses multiplicative returns and comparison preserves e
  assert.ok(b.values[1]<0);assert.deepEqual(macroComparison(r).range,{start:'2026-09-02',end:'2026-09-03'});
  assert.deepEqual(macroComparison(r).selection,['ndx','spx']);assert.equal(macroComparison({...r,error:'bad'}),null);
 });
+
+import {macroRecent,macroRefreshInputs,macroNearestDate} from '../public/macro.mjs';
+test('recent rate changes use bp and actual observation dates; short history is explicit',()=>{
+ const r=calc('real'),v=macroRecent(r);assert.equal(v[0].start,'2026-09-01');assert.equal(v[0].end,'2026-09-03');assert.ok(Math.abs(v[0].value-30)<1e-8);assert.equal(v[0].unit,'bp');assert.ok(v[1].error);assert.ok(v[2].error);
+ assert.ok(macroRecent({error:'unavailable'})[0].error);
+});
+test('recent ratios use raw multiplicative return, not normalized point difference',()=>{
+ const r={ratio:true,dates:['2026-09-01','2026-09-02','2026-09-03'],raw:[2,4,6],values:[100,200,300]};
+ assert.equal(macroRecent(r)[0].value,50);assert.equal(macroRecent(r)[0].unit,'%');
+ const dates=Array.from({length:21},(_,i)=>'2026-09-'+String(i+1).padStart(2,'0'));
+ const values=dates.map((_,i)=>i);assert.equal(macroRecent({dates,raw:values,unit:'bp'})[2].value,20);
+});
+test('refresh scope deduplicates dependencies and honors date mode',()=>{
+ assert.deepEqual(macroRefreshInputs('政策预期与曲线',false),['nominal']);
+ assert.deepEqual(macroRefreshInputs('实际利率与通胀定价',false),['real','nominal']);
+ assert.deepEqual(macroRefreshInputs('跨资产相对强弱',false),['ndx','spx','hg','gc']);
+ assert.equal(macroRefreshInputs('政策预期与曲线',true).length,6);
+});
+test('chart date selection clamps edges and selects real observation across gaps',()=>{
+ const dates=['2026-09-01','2026-09-04','2026-09-07'];assert.equal(macroNearestDate(dates,'2026-09-03'),1);assert.equal(macroNearestDate(dates,'2026-08-01'),0);assert.equal(macroNearestDate(dates,'2026-10-01'),2);assert.equal(macroNearestDate([],'2026-09-01'),-1);assert.equal(macroNearestDate(dates,'bad'),-1);
+});
