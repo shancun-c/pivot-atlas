@@ -89,3 +89,9 @@ th.level-heading{height:68px;min-width:104px;padding:10px 18px;vertical-align:mi
 .matrix-select input{width:18px;height:18px;accent-color:#135b63}
 .performance-table .missing-reason{white-space:normal;min-width:100px;max-width:150px;line-height:1.5;color:#52666e}
 .performance-controls>.button{align-self:end;min-height:44px}
+
+/* Research workflow: explicit recovery and scoped evidence. */
+.research-metrics{display:grid;grid-template-columns:1fr 1fr 1fr 1.5fr;gap:20px;padding:18px 0;border-block:1px solid var(--line);margin:8px 0 20px}
+.research-metrics>div{min-width:0;display:flex;flex-direction:column;gap:7px}.research-metrics span,.research-metrics small{color:var(--muted);font-size:14px;line-height:1.5}.research-metrics strong{font-size:22px;font-variant-numeric:tabular-nums}.research-metrics .research-dates{font-size:16px;line-height:1.5}
+.research-recovery{margin:16px 24px;padding:20px;background:#edf3f4;border:1px solid #9bb3b9;border-radius:10px;font-size:14px;line-height:1.7}.research-recovery h3{margin:0;font-size:17px}.research-recovery ul{padding-left:20px}.research-recovery p{max-width:75ch}.research-retry{margin-top:10px;font-size:14px}.comparison-selection{padding-inline:24px}
+@media(max-width:700px){.research-metrics{grid-template-columns:1fr 1fr;gap:16px}.research-recovery{margin:12px 16px;padding:16px}.research-recovery .button{white-space:normal;width:100%}.comparison-selection{padding-inline:16px}.performance-controls input,.performance-controls select{font-size:16px}}

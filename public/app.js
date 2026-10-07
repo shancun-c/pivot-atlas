@@ -1,5 +1,6 @@
-import {mountComparison} from './comparison-view.mjs?v=20261006-research4a';
-import {mountPerformance} from './performance-view.mjs?v=20261006-research4a';
+import {researchHealth} from './performance.mjs';
+import {mountComparison} from './comparison-view.mjs?v=20261007-research5';
+import {mountPerformance} from './performance-view.mjs?v=20261007-research5';
 import {structureWatch} from './structure-watch.mjs?v=20261006-watch9';
 import {icon,marketIcon} from './icons.mjs';
 import {mountChart} from './chart.mjs?v=20261006-td9-ths';
@@ -15,6 +16,7 @@ document.querySelectorAll('.dialog-close').forEach(el=>el.innerHTML=icon('close'
 let viewMode='reference', statusFilter='all';
 const selected=(r,p)=>r?.periodViews?.[viewMode]?.[p]??r?.periods?.[p];
 let assets=[], records=new Map(), period='week', group='全部', favoritesOnly=false, busy=false;
+const assetRetries=new Set();
 let stars;try{stars=new Set(JSON.parse(localStorage.getItem('pivot-stars')||'[]'))}catch{stars=new Set()}
 const groups=['港股','美股','A股','亚太及新兴','国债收益率','境内商品','境外商品','外汇','加密货币'];
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -30,11 +32,22 @@ function captureFocus(root){
  return null;
 }
 function restoreFocus(root,selector){if(selector)root.querySelector(selector)?.focus({preventScroll:true})}
-const renderComparison=mountComparison($('#comparison-page'));
+const researchSummaries={};
+ document.addEventListener('research-summary',e=>{researchSummaries[e.detail.kind]=e.detail;renderResearchMetrics()});
+ function renderResearchMetrics(){
+  const matrix=location.hash==='#performance',comparison=location.hash==='#comparison';
+  $('.metrics').hidden=matrix||comparison;const root=$('#research-metrics');root.hidden=!(matrix||comparison);if(root.hidden)return;
+  const h=researchHealth(assets,records),current=researchSummaries[matrix?'matrix':'comparison'];
+  const dates=matrix?current?.dates:current?.result?.dates;
+  const availability=matrix?`${current?.valid||0} / ${current?.total||0}`:current?.result?.error?'暂不可计算':`${current?.result?.lines?.length||0} 个标的`;
+  root.innerHTML=`<div><span>全市场研究可用</span><strong>${h.ready} / ${assets.length}</strong><small>已有报价 ${h.quotes} · 待加载 ${h.pending}${busy?' · 更新中':''}</small></div><div><span>研究不可用</span><strong>${h.unavailable}</strong><small>缓存失效、缺失或复权异常</small></div><div><span>${matrix?'当前周期可比较':'当前对照'}</span><strong>${availability}</strong><small>${matrix?'按当前筛选和排序周期统计':`${current?.result?.intervals||0} 个共同变动样本`}</small></div><div><span>${matrix?'当前观测终点范围':'实际共同区间'}</span><strong class="research-dates">${dates?.length?esc(dates[0])+' — '+esc(dates.at(-1)):'—'}</strong><small>${matrix?'日期可能不同，进入对照前需对齐':'按实际共同日期计算，不填补缺口'}</small></div>`;
+ }
+ const renderComparison=mountComparison($('#comparison-page'));
 let performanceReturn=null;
-const renderPerformance=mountPerformance($('#performance-page'),id=>{performanceReturn=id;showDetail(id,'week')},config=>{renderComparison.select(config);location.hash='#comparison'});
+const renderPerformance=mountPerformance($('#performance-page'),id=>{performanceReturn=id;showDetail(id,'week')},config=>{renderComparison.select(config);location.hash='#comparison'},retryAsset);
 const isStructurePage=()=>location.hash==='#structures';
 function renderPage(){
+ renderResearchMetrics();
  const watching=isStructurePage(),matrix=location.hash==='#performance',comparison=location.hash==='#comparison';
  $('#comparison-page').hidden=!comparison;
  $('#comparison-nav').classList.toggle('active',comparison);$('#comparison-nav').setAttribute('aria-pressed',String(comparison));
@@ -97,7 +110,15 @@ function render(){
  document.querySelectorAll('.market-link').forEach(b=>b.classList.toggle('active',b.dataset.group===group));
  $('#overview').setAttribute('aria-pressed',String(!favoritesOnly));$('#watchlist').setAttribute('aria-pressed',String(favoritesOnly));$('#mobile-stars').setAttribute('aria-pressed',String(favoritesOnly));restoreFocus($('#table-body'),rowFocus);renderPage();
 }
-async function refresh(force=false){if(busy)return;busy=true;$('#refresh').disabled=true;$('#refresh').innerHTML=icon('refresh')+'更新中…';render();let index=0;
+async function retryAsset(id){
+ if(busy||assetRetries.has(id))return;
+ assetRetries.add(id);$('#refresh').disabled=true;
+ try{const response=await fetch('/api/asset/'+encodeURIComponent(id)+'?refresh=1',{signal:AbortSignal.timeout(65000)});if(!response.ok)throw new Error();records.set(id,await response.json())}
+ catch{const old=records.get(id);records.set(id,old?.latest?{...old,status:'stale',error:'请求失败，保留上次结果'}:{status:'error',error:'服务连接失败或请求超时'})}
+ assetRetries.delete(id);$('#refresh').disabled=busy||assetRetries.size>0;
+ render();const r=records.get(id);$('#announcements').textContent=assets.find(a=>a.id===id).name+'：'+(r.status==='ok'?'请求完成，请查看研究可用状态。':'仍不可用，已保留原数据；稍后可重试。');
+}
+async function refresh(force=false){if(busy||assetRetries.size)return;busy=true;$('#refresh').disabled=true;$('#refresh').innerHTML=icon('refresh')+'更新中…';render();let index=0;
  async function worker(){while(index<assets.length){const a=assets[index++];try{const response=await fetch('/api/asset/'+a.id+(force?'?refresh=1':''),{signal:AbortSignal.timeout(65000)});if(!response.ok)throw new Error();records.set(a.id,await response.json());if($('#detail').open&&chartState.id===a.id)showDetail(a.id,chartState.p,chartState)}catch{const old=records.get(a.id);records.set(a.id,old?.latest?{...old,status:'stale',error:'请求失败，保留上次结果'}:{...a,status:'error',error:'服务连接失败或请求超时'})}render()}}
  await Promise.all(Array.from({length:4},worker));busy=false;$('#refresh').disabled=false;$('#refresh').innerHTML=icon('refresh')+'刷新行情';render();$('#announcements').textContent='行情加载完成。'+$('#progress-note').textContent+'。九转观察有 '+structureWatch(assets,records).items.length+' 个发展中序列，'+structureWatch(assets,records).completed.length+' 个最新达到9的标的。';
 }

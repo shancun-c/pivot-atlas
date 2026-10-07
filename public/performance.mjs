@@ -50,6 +50,21 @@ export function matrixComparison(assets,records,key,cutoff){
  const invalid=rows.filter(r=>r.values[key]?.value==null);
  if(invalid.length)return {error:'无法传递当前周期：'+invalid.map(r=>r.asset.name+'（'+(r.values[key]?.reason||'无有效数据')+'）').join('、')};
  const periods=rows.map(r=>r.values[key]);
- if(new Set(periods.map(p=>p.baseDate+'|'+p.endDate)).size!==1)return {error:'所选标的的基准日或终点不同，请调整截止日/周期，或在跨资产对照中明确选择共同区间。'};
+ if(new Set(periods.map(p=>p.baseDate+'|'+p.endDate)).size!==1){
+  const start=periods.map(p=>p.baseDate).sort().at(-1),end=periods.map(p=>p.endDate).sort()[0];
+  const dates=assets.map(a=>researchSeries(a,records.get(a.id)).history.map(b=>b.date));
+  // Only shrink into the overlap; never fill missing dates or extend the requested periods.
+  const common=dates[0].filter(d=>d>=start&&d<=end&&dates.every(ds=>ds.includes(d)));
+  const proposal=common.length<2?null:{selection:assets.map(a=>a.id),days:90,range:{start:common[0],end:common.at(-1)},origin:'来自矩阵：'+horizons.find(([k])=>k===key)[1]+' · 已改用共同区间'};
+  return {error:'所选标的的基准日或终点不同。',periods:rows.map(r=>({name:r.asset.name,...r.values[key]})),proposal};
+ }
  return {selection:assets.map(a=>a.id),days:90,range:{start:periods[0].baseDate,end:periods[0].endDate},origin:'来自矩阵：'+horizons.find(([k])=>k===key)[1]};
+}
+
+export function researchHealth(assets,records){
+ const rows=assets.map(a=>performance(a,records.get(a.id)));
+ return {quotes:assets.filter(a=>records.get(a.id)?.latest).length,
+  ready:rows.filter(r=>!r.reason).length,
+  unavailable:rows.filter(r=>records.has(r.asset.id)&&r.reason).length,
+  pending:assets.filter(a=>!records.has(a.id)).length};
 }
