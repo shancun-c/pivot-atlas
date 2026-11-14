@@ -3,7 +3,11 @@
 跨市场日线、传统枢轴、神奇九转与表现矩阵。51个标的、9类市场，Python HTTP服务 + 原生HTML/CSS/JavaScript，无前端构建依赖。
 
 ## 开发
+需要 Python 3.12、curl；运行测试还需 Node.js 22。
+
 ```sh
+git clone https://github.com/shancun-c/pivot-atlas.git
+cd pivot-atlas
 python3.12 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python server.py
@@ -21,7 +25,7 @@ python3.12 -m venv .venv
 node --test tests/*.test.mjs
 node --check public/app.js
 ```
-GitHub Actions在push/PR执行相同检查。使用Python3.12以匹配锁定依赖。工作流的setup-python/setup-node参数据官方Actions文档核对；当前会话无可调用Context7工具，未通过Context7验证。业务计算只依赖本地原生代码。
+GitHub Actions在push/PR执行相同检查。使用Python3.12以匹配锁定依赖。业务计算使用本地代码；CI不连接生产服务器。
 
 ## 模块
 - `server.py`：API、缓存、失败退避和数据新鲜度。
@@ -38,8 +42,18 @@ GitHub Actions在push/PR执行相同检查。使用Python3.12以匹配锁定依�
 见[首轮验收口径](docs/ITERATION-01.md)、[设计规范](DESIGN.md)、[历史记录](docs/HISTORY.md)。公开行情接口不保证实时或稳定，用户仍需核对数据源再分发许可。
 
 ## Git与部署
-仓库默认私有。缓存、密钥、虚拟环境、运行截图及服务器运行记录不入Git。
+代码采用 [MIT License](LICENSE) 开源。第三方行情及依赖不因本许可证获得额外授权。缓存、密钥、虚拟环境、运行截图及服务器运行记录不入Git。
 发布需先测试，将应用文件复制到独立release目录，再切换current软链接，仅重启本站；保留前一版和持久缓存。服务器私有运行记录留在本地deploy目录，不上传仓库。不设置自动生产部署。
 
 ## 跨资产对照（Iteration 02）
 `/#comparison` 支持2–4个标的、30/90/180自然日窗口和宏观研究组合。日期取交集，价格起点100、收益率累计bp分面展示；显示区间变化、样本量及共同区间变动的Pearson相关性。少于20个变动样本不输出相关性。不代表同步收盘、因果或总回报。见[计算与验收口径](docs/ITERATION-02.md)。
+
+
+## 宏观传导
+`/#macro` 提供美国2Y收益率、10Y−2Y利差、10Y实际收益率、盈亏平衡通胀代理、NDX/SPX和COMEX铜金比。支持共同日期、90/180/365日窗口、利率与比值分解、近期变化、日期游标及CSV导出。数据来自美国财政部和行情适配器，不保证实时或持续可用。研究视角与日期保存在本机浏览器。
+
+## 贡献与安全
+提交修改前运行上述检查，PR说明触发条件、口径变化和验证结果。请勿提交真实缓存、账户数据、密钥或私人部署资料；测试使用合成样本。发现安全问题时不要在公开Issue中贴出敏感内容。
+
+## 许可与使用边界
+MIT许可证适用于本仓库代码，不覆盖第三方行情的抓取、展示、商业使用或再分发许可。使用者需自行核查各数据源条款。指标是描述性研究工具，不构成投资建议。
